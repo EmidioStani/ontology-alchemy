@@ -2,6 +2,9 @@
 from itertools import chain
 from random import choice
 from string import ascii_lowercase, ascii_uppercase, digits
+import re
+import configparser
+import time
 
 from rdflib.namespace import RDF, RDFS, SKOS
 from six import with_metaclass
@@ -9,6 +12,9 @@ from six import with_metaclass
 from ontology_alchemy.proxy import LiteralPropertyProxy, PropertyProxy
 from ontology_alchemy.session import Session
 
+def strip_from_uri(uri):
+    splituri = re.split("\|/|#",uri)
+    return splituri[-1]
 
 def generate_uri(base_uri, random_length=8):
     random_id = "".join(
@@ -16,6 +22,19 @@ def generate_uri(base_uri, random_length=8):
         for _ in range(random_length)
     )
     return "{}_{}".format(base_uri, random_id)
+
+class URISpecification:
+
+    def __init__(self, def_base_uri, dict1):
+        self.base_uri = def_base_uri
+        self.dict1 = dict1
+
+    def getURI(self,fullType):
+        self.component_type = strip_from_uri(fullType)
+        self.encodedstring = self.dict1["label"] + self.component_type#.encode('base64','strict')
+        self.unicity = int(time.time())
+        return self.base_uri + self.component_type + "/" + self.encodedstring + "-" + str(self.unicity)
+
 
 
 class RDFS_ClassMeta(type):
@@ -77,7 +96,8 @@ class RDFS_Class(with_metaclass(RDFS_ClassMeta)):
         self.seeAlso = PropertyProxy(name="seeAlso", uri=RDFS.seeAlso)
         self.isDefinedBy = PropertyProxy(name="isDefinedBy", uri=RDFS.isDefinedBy)
         self.value = PropertyProxy(name="value", uri=RDF.value)
-        self.uri = uri or generate_uri(self.__class__.__uri__)
+        self.uriHandle = uri# or generate_uri(self.__class__.__uri__)
+        self.type = PropertyProxy(name="type", uri=RDF.type)
 
         for property_class in self.__class__.__properties__:
             setattr(self, property_class.__name__, PropertyProxy.for_(property_class))
@@ -85,6 +105,13 @@ class RDFS_Class(with_metaclass(RDFS_ClassMeta)):
         for k, v in kwargs.items():
             property_proxy = getattr(self, k)
             property_proxy += v
+
+        # Set the type
+        property_proxy = getattr(self, "type")
+        property_proxy += self.__class__.__uri__
+
+        # Generate the URI
+        self.uri = self.uriHandle.getURI(self.__class__.__uri__)
 
         Session.get_current().register_instance(self)
 

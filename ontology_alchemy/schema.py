@@ -13,6 +13,7 @@ from rdflib import Literal
 from rdflib.namespace import RDF, RDFS, OWL, XSD
 from six import string_types
 from six.moves.urllib.parse import urlparse
+import re
 
 from ontology_alchemy.constants import COMMON_PROPERTY_URIS
 
@@ -117,5 +118,9 @@ def looks_like_a_property_uri(uri):
     first letter for the type.
 
     """
-    name = urlparse(uri).path
+    # name = urlparse(uri).path
+    splituri = re.split("#",uri)
+    splituri = re.split("/",splituri[-1])
+    name = splituri[-1]
+    # print("-->", name)
     return name[0] in ascii_lowercase

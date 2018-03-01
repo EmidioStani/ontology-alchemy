@@ -65,7 +65,7 @@ class Session(object):
 
         """
         return chain.from_iterable(
-            instance.rdf_statements()
+            instance.iter_rdf_statements()
             for instance in self.instances
         )
 
