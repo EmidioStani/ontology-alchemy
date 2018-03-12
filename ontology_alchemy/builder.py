@@ -24,6 +24,7 @@ from ontology_alchemy.schema import (
     is_type_predicate,
     looks_like_a_property_uri,
 )
+import random
 
 
 def get_base_uri(uri):
@@ -89,8 +90,6 @@ class OntologyBuilder(object):
     def add_property_domain(self, property_uri, domain_uri):
         property_name = self._extract_name(property_uri)
         domain_class = self._resolve_domain(domain_uri)
-        # print(domain_class)
-        # help(self.namespace[property_name])
         self.namespace[property_name].domain += domain_class
 
     def add_property_range(self, property_uri, range_uri):
@@ -112,9 +111,16 @@ class OntologyBuilder(object):
         self.namespace[class_name].label += Literal(label, lang=lang)
 
     def _extract_name(self, uri):
-        return str(
-            uri.replace(self.base_uri, "")
-        )
+        class_uri_base = get_base_uri(uri)
+        classname = str(uri.replace(class_uri_base, ""))
+        for ns in self.graph.namespaces():
+            if in_namespace(uri, ns[1]):
+                return ns[0] + classname
+        return classname
+        # old code
+        # return str(
+            # uri.replace(self.base_uri, "")
+        # )
 
     def _infer_base_uri(self, graph):
         """
@@ -201,14 +207,15 @@ class OntologyBuilder(object):
 
         for classes in toposort(self._sub_class_graph):
             for class_uri in classes:
+
+                # old code removed classes that were not in the namespace. We keep them all.
                 if not in_namespace(class_uri, base_uri=self.base_uri):
-                    # Do not add types which are not explicitly part of our current ontology URI namespace.
                     self.logger.debug(
                         "_build_class_hierarchy() - class_uri: %s not based in base_uri: %s, skipping",
                         class_uri,
                         self.base_uri,
                     )
-                    continue
+                    # continue
 
                 is_property = is_a_property_subtype(class_uri, type_graph=self._type_graph)
 
@@ -235,11 +242,7 @@ class OntologyBuilder(object):
 
         base_classes = (RDF_Property,) if is_property else (RDFS_Class,)
 
-        # Gives errors: properties are suddenly identified as classes
         if base_class_uris:
-            # for base_class_uri in base_class_uris:
-                # print(base_class_uri)
-                # print(self._resolve_base_class(base_class_uri))
             base_classes = tuple(
                 self._resolve_base_class(base_class_uri)
                 for base_class_uri in base_class_uris

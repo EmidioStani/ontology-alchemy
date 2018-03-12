@@ -102,18 +102,26 @@ class RDFS_Class(with_metaclass(RDFS_ClassMeta)):
         for property_class in self.__class__.__properties__:
             setattr(self, property_class.__name__, PropertyProxy.for_(property_class))
 
-        for k, v in kwargs.items():
-            property_proxy = getattr(self, k)
-            property_proxy += v
-
-        # Set the type
-        property_proxy = getattr(self, "type")
-        property_proxy += self.__class__.__uri__
-
         # Generate the URI
-        self.uri = self.uriHandle.getURI(self.__class__.__uri__)
+        if uri != None:
+            self.uri = self.uriHandle.getURI(self.__class__.__uri__)
+
+        for k, v in kwargs.items():
+            if k == "imposeURI":
+                self.uri = v # overwrite computed URI with imposed one
+            else:
+                property_proxy = getattr(self, k)
+                property_proxy += v
+
+
+        self.addType(self.__class__.__uri__)
 
         Session.get_current().register_instance(self)
+
+    def addType(self,uri):
+        # Set the type
+        property_proxy = getattr(self, "type")
+        property_proxy += uri
 
     def iter_rdf_statements(self):
         """
@@ -127,6 +135,9 @@ class RDFS_Class(with_metaclass(RDFS_ClassMeta)):
                 property_uri = value.uri
                 for property_value in getattr(self, property_name):
                     yield (self.uri, property_uri, property_value)
+
+    def getInstanceUri(self):
+        return self.uri
 
 
 class RDF_Property(with_metaclass(RDF_PropertyMeta, RDFS_Class)):

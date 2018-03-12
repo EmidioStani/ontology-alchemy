@@ -122,5 +122,4 @@ def looks_like_a_property_uri(uri):
     splituri = re.split("#",uri)
     splituri = re.split("/",splituri[-1])
     name = splituri[-1]
-    # print("-->", name)
     return name[0] in ascii_lowercase
