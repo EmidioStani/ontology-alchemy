@@ -5,6 +5,7 @@ from string import ascii_lowercase, ascii_uppercase, digits
 import re
 import configparser
 import time
+import codecs
 
 from rdflib.namespace import RDF, RDFS, SKOS
 from six import with_metaclass
@@ -31,8 +32,8 @@ class URISpecification:
 
     def getURI(self,fullType):
         self.component_type = strip_from_uri(fullType)
-        self.encodedstring = self.dict1["label"] + self.component_type#.encode('base64','strict')
-        self.unicity = int(time.time())
+        self.encodedstring = codecs.encode(self.dict1["label"], "rot-13")#.encode('base64','strict')
+        self.unicity = int(time.time() * 1000)
         return self.base_uri + self.component_type + "/" + self.encodedstring + "-" + str(self.unicity)
 
 
