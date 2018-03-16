@@ -93,6 +93,7 @@ class RDFS_Class(with_metaclass(RDFS_ClassMeta)):
     def __init__(self, uri=None, **kwargs):
         # Define proxies for the core RDFS properties as defined in the RDF Schema specification
         self.label = LiteralPropertyProxy(name="label", uri=RDFS.label)
+        self.prefLabel = LiteralPropertyProxy(name="prefLabel", uri=SKOS.prefLabel)
         self.comment = LiteralPropertyProxy(name="comment", uri=RDFS.comment)
         self.seeAlso = PropertyProxy(name="seeAlso", uri=RDFS.seeAlso)
         self.isDefinedBy = PropertyProxy(name="isDefinedBy", uri=RDFS.isDefinedBy)
