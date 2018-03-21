@@ -52,6 +52,8 @@ class OntologyBuilder(object):
         self.base_uri = base_uri or self._infer_base_uri(graph)
         self.graph = graph
         self.namespace = {}
+        self.listOfProperties = []
+        self.listOfClasses = []
         self.logger = getLogger(__name__)
 
         self._type_graph = {
@@ -111,12 +113,17 @@ class OntologyBuilder(object):
         self.namespace[class_name].label += Literal(label, lang=lang)
 
     def _extract_name(self, uri):
-        class_uri_base = get_base_uri(uri)
-        classname = str(uri.replace(class_uri_base, ""))
+        classname = self._extract_uri_end(uri)
         for ns in self.graph.namespaces():
             if in_namespace(uri, ns[1]):
                 return ns[0] + classname
         return classname
+
+    def _extract_uri_end(self,uri):
+        class_uri_base = get_base_uri(uri)
+        classname = str(uri.replace(class_uri_base, ""))
+        return classname
+
         # old code
         # return str(
             # uri.replace(self.base_uri, "")
@@ -217,7 +224,15 @@ class OntologyBuilder(object):
                     )
                     # continue
 
+                # don't add base URIs as a class
+                if class_uri[-1] == "#" or class_uri[-1] == "/":
+                    continue
+
                 is_property = is_a_property_subtype(class_uri, type_graph=self._type_graph)
+                if is_property:
+                    self.listOfProperties.append(class_uri)
+                else:
+                    self.listOfClasses.append(class_uri)
 
                 self._add_type(
                     class_uri,
@@ -234,6 +249,13 @@ class OntologyBuilder(object):
                 self.add_property_domain(s, o)
             elif is_range_predicate(p):
                 self.add_property_range(s, o)
+
+        for prop in self.listOfProperties:
+            property_name = self._extract_name(prop)
+            if not self.namespace[property_name].domain.values:
+                for klass in self.listOfClasses:
+                    self.add_property_domain(prop, klass)
+
 
     def _add_type(self, class_uri, base_class_uris=None, is_property=False):
         class_name = self._extract_name(class_uri)

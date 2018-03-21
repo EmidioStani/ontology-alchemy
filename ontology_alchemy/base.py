@@ -14,7 +14,7 @@ from ontology_alchemy.proxy import LiteralPropertyProxy, PropertyProxy
 from ontology_alchemy.session import Session
 
 def strip_from_uri(uri):
-    splituri = re.split("\|/|#",uri)
+    splituri = re.split("[/|#]",uri)
     return splituri[-1]
 
 def generate_uri(base_uri, random_length=8):
@@ -34,7 +34,7 @@ class URISpecification:
         self.component_type = strip_from_uri(fullType)
         self.encodedstring = codecs.encode(self.dict1["label"], "rot-13")#.encode('base64','strict')
         self.unicity = int(time.time() * 1000)
-        return self.base_uri + self.component_type + "/" + self.encodedstring + "-" + str(self.unicity)
+        return self.base_uri + 'id/' + self.component_type + "/" + self.encodedstring + "-" + str(self.unicity)
 
 
 
