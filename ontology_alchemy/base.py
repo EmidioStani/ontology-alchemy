@@ -6,6 +6,7 @@ import re
 import configparser
 import time
 import codecs
+import binascii
 
 from rdflib.namespace import RDF, RDFS, SKOS
 from six import with_metaclass
@@ -26,15 +27,17 @@ def generate_uri(base_uri, random_length=8):
 
 class URISpecification:
 
-    def __init__(self, def_base_uri, dict1):
+    def __init__(self, def_base_uri, label):
         self.base_uri = def_base_uri
-        self.dict1 = dict1
+        self.label = label
+        if not label:
+            self.label = "empty"
 
     def getURI(self,fullType):
         self.component_type = strip_from_uri(fullType)
-        self.encodedstring = codecs.encode(self.dict1["label"], "rot-13")#.encode('base64','strict')
-        self.unicity = int(time.time() * 1000)
-        return self.base_uri + 'id/' + self.component_type + "/" + self.encodedstring + "-" + str(self.unicity)
+        self.encodedstring = binascii.hexlify(self.label.encode()).decode()
+        # self.unicity = int(time.time() * 1000)
+        return self.base_uri + 'id/' + self.component_type + "/" + self.encodedstring
 
 
 
