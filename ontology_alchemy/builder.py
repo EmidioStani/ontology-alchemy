@@ -215,15 +215,6 @@ class OntologyBuilder(object):
         for classes in toposort(self._sub_class_graph):
             for class_uri in classes:
 
-                # old code removed classes that were not in the namespace. We keep them all.
-                if not in_namespace(class_uri, base_uri=self.base_uri):
-                    self.logger.debug(
-                        "_build_class_hierarchy() - class_uri: %s not based in base_uri: %s, skipping",
-                        class_uri,
-                        self.base_uri,
-                    )
-                    # continue
-
                 # don't add base URIs as a class
                 if class_uri[-1] == "#" or class_uri[-1] == "/":
                     continue
@@ -253,8 +244,7 @@ class OntologyBuilder(object):
         for prop in self.listOfProperties:
             property_name = self._extract_name(prop)
             if not self.namespace[property_name].domain.values:
-                for klass in self.listOfClasses:
-                    self.add_property_domain(prop, klass)
+                self.add_property_domain(prop, RDFS.Class)
 
 
     def _add_type(self, class_uri, base_class_uris=None, is_property=False):
